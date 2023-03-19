@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-from sde.core import add, add_inplace
+from sde.core import add, add_inplace, multiply_matrix
 from sde import KernelWrapper
 
 
@@ -36,6 +36,18 @@ def test_add(precision, shape: tuple[int]):
     exp_result = a + b
     kernel = KernelWrapper(
         add, precision, outs=(2,), device=True, n_args=3
+    )
+    kernel[1, 1](a, b, c)
+    npt.assert_allclose(c, exp_result, atol=tolerance[precision])
+
+
+@pytest.mark.parametrize('shape', [(3, 4), (1, 2), (2, 1)])
+def test_multiply_matrix(precision, shape: tuple[int]):
+    a, b = np.random.randn(*shape), np.random.randn(*shape[::-1])
+    exp_result = a @ b
+    c = np.zeros_like(exp_result)
+    kernel = KernelWrapper(
+        multiply_matrix, precision, outs=(2,), device=True, n_args=3
     )
     kernel[1, 1](a, b, c)
     npt.assert_allclose(c, exp_result, atol=tolerance[precision])

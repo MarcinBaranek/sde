@@ -14,3 +14,13 @@ def add_inplace(left: NDArray, right: NDArray):
     for i in range(left.shape[0]):
         for j in range(left.shape[1]):
             left[i, j] += right[i, j]
+
+
+@cuda.jit(device=True)
+def multiply_matrix(matrix_a, matrix_b, result):
+    for i in range(matrix_a.shape[0]):
+        for j in range(matrix_b.shape[1]):
+            temp = 0
+            for k in range(matrix_a.shape[1]):
+                temp += matrix_a[i, k] * matrix_b[k, j]
+            result[i, j] = temp
