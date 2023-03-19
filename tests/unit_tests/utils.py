@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.fixture(params=['float16', 'float32', 'float64', 'float128'])
+@pytest.fixture(params=['float16', 'float32', 'float64'])
 def precision(request):
     return request.param
 

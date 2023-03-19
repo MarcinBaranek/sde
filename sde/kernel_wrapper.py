@@ -1,13 +1,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Optional
 
 from numba import cuda
+from numba.cuda import random
 import numpy as np
 
 from .config import precisions_map
 from .wrapped_device_function import get_device_function_wrapper
+
+
+@dataclass
+class State:
+    n: int
+    seed: int = 7
+    state: Optional[cuda.device_array] = None
+
+    def __post_init__(self):
+        self.state = random.create_xoroshiro128p_states(self.n, self.seed)
 
 
 @dataclass
@@ -17,9 +28,12 @@ class KernelWrapper:
     outs: tuple[int] = ()
     device: bool = False
     n_args: int = 2
+    state: Optional[State] = None
 
     def __post_init__(self):
         self.get_precision()
+        if self.state:
+            self.n_args += 1
 
     def get_precision(self) -> type:
         if self.precision not in precisions_map:
@@ -31,11 +45,15 @@ class KernelWrapper:
 
     def send_args_to_device(self, *args):
         precision = self.get_precision()
-        return tuple(
+        args = list(
             cuda.to_device(arg.astype(precision))
             if isinstance(arg, np.ndarray) else arg
             for arg in args
         )
+        if self.state is not None:
+            args.append(self.state.state)
+            return args
+        return args
 
     def __getitem__(self, grid):
         def caller(*args):

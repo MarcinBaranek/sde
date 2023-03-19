@@ -1,5 +1,5 @@
-import numba
 from numba import cuda
+from numba.core.types import float16
 from numba.cuda.random import (
     xoroshiro128p_normal_float32, xoroshiro128p_normal_float64
 )
@@ -11,7 +11,7 @@ def gen_normal_16(place_holder, state):
     for i in range(place_holder.shape[0]):
         for j in range(place_holder.shape[1]):
             place_holder[i, j] =\
-                numba.float16(xoroshiro128p_normal_float32(state, thread_id))
+                float16(xoroshiro128p_normal_float32(state, thread_id))
 
 
 @cuda.jit(device=True)
