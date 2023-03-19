@@ -3,7 +3,9 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-from sde.core import add, add_inplace, multiply_matrix
+from sde.core import (
+    add, add_inplace, multiply_matrix, multiply_matrix_by_scalar
+)
 from sde import KernelWrapper
 
 
@@ -51,3 +53,15 @@ def test_multiply_matrix(precision, shape: tuple[int]):
     )
     kernel[1, 1](a, b, c)
     npt.assert_allclose(c, exp_result, atol=tolerance[precision])
+
+
+@pytest.mark.parametrize('shape', [(3, 4), (1, 2), (2, 1)])
+def test_multiply_matrix(precision, shape: tuple[int]):
+    a = np.random.randn(*shape)
+    scalar = np.random.random()
+    exp_result = a * scalar
+    kernel = KernelWrapper(
+        multiply_matrix_by_scalar, precision, outs=(0,), device=True, n_args=2
+    )
+    kernel[1, 1](a, scalar)
+    npt.assert_allclose(a, exp_result, atol=tolerance[precision])
