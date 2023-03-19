@@ -42,8 +42,6 @@ class KernelWrapper:
             kernel = get_device_function_wrapper(self.kernel, self.n_args)\
                 if self.device else self.kernel
             device_args = self.send_args_to_device(*args)
-            for a in device_args:
-                print(a.dtype)
             kernel[grid](*device_args)
             for idx in self.outs:
                 result = np.empty(
