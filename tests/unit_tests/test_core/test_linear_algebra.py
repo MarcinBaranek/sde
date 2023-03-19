@@ -10,18 +10,10 @@ from sde.core import (
 from sde import KernelWrapper
 from sde.config import precisions_map
 
-
-@pytest.fixture(params=['float16', 'float32', 'float64', 'float128'])
-def precision(request):
-    return request.param
+from ..utils import precision, tolerance
 
 
-tolerance = {
-    'float16': 1.e-2,
-    'float32': 1.e-4,
-    'float64': 1.e-8,
-    'float128': 1.e-12,
-}
+np.random.seed(7)
 
 
 @pytest.mark.parametrize('shape', [(3, 4), (1, 2), (2, 1)])
