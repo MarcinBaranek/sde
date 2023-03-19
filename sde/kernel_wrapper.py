@@ -55,16 +55,19 @@ class KernelWrapper:
             return args
         return args
 
+    def copy_results_to_host(self, args, device_args):
+        for idx in self.outs:
+            result = np.empty(
+                shape=args[idx].shape, dtype=device_args[idx].dtype
+            )
+            device_args[idx].copy_to_host(result)
+            args[idx][:] = result[:]
+
     def __getitem__(self, grid):
         def caller(*args):
             kernel = get_device_function_wrapper(self.kernel, self.n_args)\
                 if self.device else self.kernel
             device_args = self.send_args_to_device(*args)
             kernel[grid](*device_args)
-            for idx in self.outs:
-                result = np.empty(
-                    shape=args[idx].shape, dtype=device_args[idx].dtype
-                )
-                device_args[idx].copy_to_host(result)
-                args[idx][:] = result[:]
+            self.copy_results_to_host(args, device_args)
         return caller
