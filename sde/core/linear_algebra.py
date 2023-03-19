@@ -1,5 +1,6 @@
 from numba import cuda
 from numpy.typing import NDArray
+import math
 
 
 @cuda.jit(device=True)
@@ -31,3 +32,21 @@ def multiply_matrix_by_scalar(matrix, scalar):
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):
             matrix[i, j] = matrix[i, j] * scalar
+
+
+@cuda.jit(device=True)
+def norm(vector):
+    total = 0
+    for i in range(vector.shape[0]):
+        for j in range(vector.shape[1]):
+            total += vector[i, j] ** 2
+    return math.sqrt(total)
+
+
+@cuda.jit(device=True)
+def sse(array_a, array_b):
+    total = 0
+    for i in range(array_a.shape[0]):
+        for j in range(array_a.shape[1]):
+            total += (array_a[i, j] - array_b[i, j]) ** 2
+    return total
