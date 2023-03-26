@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Optional
 
+import numpy as np
 from numba import cuda
 from numba.cuda import random
-import numpy as np
 
 from .config import precisions_map
 from .wrapped_device_function import get_device_function_wrapper

@@ -1,6 +1,7 @@
+import math
+
 from numba import cuda
 from numpy.typing import NDArray
-import math
 
 
 @cuda.jit(device=True)

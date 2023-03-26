@@ -1,17 +1,14 @@
-import pytest
-
 import numpy as np
 import numpy.testing as npt
+import pytest
 from numba import cuda
 
+from sde import KernelWrapper
+from sde.config import precisions_map
 from sde.core import (
     add, add_inplace, multiply_matrix, multiply_matrix_by_scalar, norm, sse
 )
-from sde import KernelWrapper
-from sde.config import precisions_map
-
 from ..utils import precision, tolerance
-
 
 np.random.seed(7)
 

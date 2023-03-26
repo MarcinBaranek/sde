@@ -6,7 +6,7 @@ from numba import cuda
 from sde import KernelWrapper, State
 from sde.random import get_normal_generator, get_uniform_generator
 from sde.utils import get_thread_id
-from .utils import tolerance
+from .utils import tolerance, precision
 
 
 @pytest.mark.parametrize('shape', [(3, 4), (1, 2), (2, 1)])

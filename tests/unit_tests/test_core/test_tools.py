@@ -1,10 +1,9 @@
-import pytest
-import numpy.testing as npt
 import numpy as np
+import numpy.testing as npt
+import pytest
 
 from sde import KernelWrapper
 from sde.core import write_from_to, fill
-
 from ..utils import precision, tolerance
 
 
