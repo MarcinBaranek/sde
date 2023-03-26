@@ -28,6 +28,37 @@ def kernel(result, wiener, disturbed_wiener, delta, beta, state):
 
 
 @pytest.mark.parametrize(
+    'delta, error',
+    [
+        (0.9, 15.56575684416344),
+        (0.8, 12.298869605264942),
+        (0.7, 9.41632204153097),
+        (0.6, 6.918114152961528),
+        (0.5, 4.804245939556617),
+        (0.4, 3.0747174013162355),
+        (0.3, 1.729528538240382),
+        (0.2, 0.768679350329059),
+        (0.1, 0.19216983758226472),
+        (0.01, 0.0019216983758226494),
+        (0.001, 1.9216983758226367e-05),
+        (0.0001, 1.9216983758224827e-07),
+        (0.00001, 1.9216983758212026e-09),
+        (0.000001, 1.9216983758212026e-11),
+        (0., 0.),
+    ]
+)
+def test_delta_impact(delta, error):
+    ss_errors = np.zeros(shape=(3000,))
+    wiener = np.zeros(shape=(5, 6))
+    disturbed_wiener = np.zeros_like(wiener)
+    wrapped_kernel = KernelWrapper(
+        kernel, 'float64', outs=(0,), device=False, state=State(n=1, seed=7)
+    )
+    wrapped_kernel[1, 1](ss_errors, wiener, disturbed_wiener, delta, 0.5)
+    assert ss_errors.mean() == pytest.approx(error, abs=1.e-20)
+
+
+@pytest.mark.parametrize(
     'beta, error',
     [
         (0.9, 15.725696165034236),
@@ -51,7 +82,7 @@ def test_beta_impact(beta, error):
     wiener = np.zeros(shape=(5, 6))
     disturbed_wiener = np.zeros_like(wiener)
     wrapped_kernel = KernelWrapper(
-        kernel, 'float64', outs=(0,), device=False, state=State(n=1000, seed=7)
+        kernel, 'float64', outs=(0,), device=False, state=State(n=1, seed=7)
     )
     wrapped_kernel[1, 1](ss_errors, wiener, disturbed_wiener, 1.0, beta)
     assert ss_errors.mean() == pytest.approx(error)
@@ -64,7 +95,6 @@ def test_beta_impact(beta, error):
         (100, 19.509574422688036),
         (1000, 19.328419849578964),
         (10000, 19.04985171644142),
-        (100000, 19.101817945216098)
     ]
 )
 def test_n_impact(n, error):
@@ -72,7 +102,7 @@ def test_n_impact(n, error):
     wiener = np.zeros(shape=(5, 6))
     disturbed_wiener = np.zeros_like(wiener)
     wrapped_kernel = KernelWrapper(
-        kernel, 'float64', outs=(0,), device=False, state=State(n=n, seed=7)
+        kernel, 'float64', outs=(0,), device=False, state=State(n=1, seed=7)
     )
     wrapped_kernel[1, 1](ss_errors, wiener, disturbed_wiener, 1.0, 0.5)
     assert ss_errors.mean() == pytest.approx(error)

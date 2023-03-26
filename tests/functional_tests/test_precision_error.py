@@ -3,9 +3,9 @@ import pytest
 from numba import cuda
 
 from sde import State, KernelWrapper, ArgPrecision
+from sde.core import sse, write_from_to
 from sde.random import gen_normal_64
 from sde.utils import get_thread_id
-from sde.core import sse, write_from_to
 
 
 class TestPrecisionError:
@@ -42,5 +42,3 @@ class TestPrecisionError:
         assert res[0] == pytest.approx(
             ((double_arr - float_arr)**2).sum(), abs=1.e-15
         )
-
-
