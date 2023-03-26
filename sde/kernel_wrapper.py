@@ -15,10 +15,10 @@ from .wrapped_device_function import get_device_function_wrapper
 class State:
     n: int
     seed: int = 7
-    state: Optional[cuda.device_array] = None
+    device_state: Optional[cuda.device_array] = None
 
     def __post_init__(self):
-        self.state = random.create_xoroshiro128p_states(self.n, self.seed)
+        self.device_state = random.create_xoroshiro128p_states(self.n, self.seed)
 
 
 @dataclass
@@ -51,7 +51,7 @@ class KernelWrapper:
             for arg in args
         )
         if self.state is not None:
-            args.append(self.state.state)
+            args.append(self.state.device_state)
             return args
         return args
 
