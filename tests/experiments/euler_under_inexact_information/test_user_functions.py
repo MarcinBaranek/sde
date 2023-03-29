@@ -6,7 +6,9 @@ from sde.random import gen_normal_64
 from sde.core import multiply_matrix_by_scalar, add_inplace, sse, fill
 from sde import KernelWrapper, State
 import math
-from experiments.euler_under_inexact_information.user_tests_functions import pw
+from experiments.euler_under_inexact_information.user_tests_functions import (
+    pw, a, pa, b, pb
+)
 
 
 @cuda.jit
@@ -106,3 +108,86 @@ def test_n_impact(n, error):
     )
     wrapped_kernel[1, 1](ss_errors, wiener, disturbed_wiener, 1.0, 0.5)
     assert ss_errors.mean() == pytest.approx(error)
+
+
+# TODO tests below functions
+def get_function_kernel(exact_func, disturbed_func):
+    @cuda.jit
+    def function_compare_kernel(
+            time: float, point, exact, disturbed, delta, state
+    ):
+        pos = get_thread_id()
+        if pos < 1:
+            exact_func(time, point, exact)
+            disturbed_func(time, point, delta, disturbed, state)
+
+    return function_compare_kernel
+
+
+@pytest.mark.parametrize(
+    't, point, delta, error',
+    [
+        (1.0, np.array([[1.0], [-1.0]]), 0, 0),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-4, 1.2373348064410633e-09),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-3, 1.2373348064410633e-07),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-2, 1.2373348064410633e-05),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-1, 1.2373348064410633e-03),
+        (1.0, np.array([[1.0], [-1.0]]), 0.5, 3.093337016105295e-2),
+        (0.1, np.array([[1.0], [-1.0]]), 0, 0),
+        (0.1, np.array([[0.3], [-40]]), 1.e-4, 1.503737127723615e-09),
+        (0.1, np.array([[0.3], [-40]]), 1.e-3, 1.503737127723615e-07),
+        (0.1, np.array([[0.3], [-40]]), 1.e-2, 1.503737127723615e-05),
+        (0.1, np.array([[0.3], [-40]]), 1.e-1, 1.503737127723615e-03),
+        (0.1, np.array([[0.3], [-40]]), 0.5, 3.759342819311715e-2),
+        (0.1, np.array([[0.3], [-40]]), 1.e-2, 1.503737127723615e-05),
+        (0.2, np.array([[0.3], [-40]]), 1.e-2, 1.5042043866261502e-05),
+        (0.3, np.array([[0.3], [-40]]), 1.e-2, 1.504983151461915e-05),
+        (0.4, np.array([[0.3], [-40]]), 1.e-2, 1.5060734222319861e-05),
+        (0.5, np.array([[0.3], [-40]]), 1.e-2, 1.507475198936363e-05),
+        (0.6, np.array([[0.3], [-40]]), 1.e-2, 1.5091884815750457e-05),
+        (0.7, np.array([[0.3], [-40]]), 1.e-2, 1.5112132701480347e-05),
+    ]
+)
+def test_disturbed_a_functions(t, point, delta, error):
+    precision = 'float64'
+    exact_result = np.zeros(shape=(2, 1))
+    disturb_result = np.zeros(shape=(2, 1))
+    test_kernel = KernelWrapper(
+        get_function_kernel(a, pa), precision, outs=(2, 3),
+        state=State(1, seed=7)
+    )
+    test_kernel[1, 1](t, point, exact_result, disturb_result, delta)
+    assert exact_result.sum() != 0
+    obtained_error = ((exact_result - disturb_result) ** 2).sum()
+    assert obtained_error == pytest.approx(error, abs=1.e-12)
+
+
+@pytest.mark.parametrize(
+    't, point, delta, error',
+    [
+        (1.0, np.array([[1.0], [-1.0]]), 0, 0),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-4, 1.7542685352858473e-8),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-3, 1.75426853528597e-6),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-2, 1.754268535285797e-4),
+        (1.0, np.array([[1.0], [-1.0]]), 1.e-1, 1.754268535285797e-2),
+        (1.0, np.array([[1.0], [-1.0]]), 0.5, 4.385671338214494e-1),
+        (0.1, np.array([[1.0], [-1.0]]), 0, 0),
+        (0.1, np.array([[0.3], [-40]]), 1.e-4, 6.682969505953102e-06),
+        (0.1, np.array([[0.3], [-40]]), 1.e-3, 6.682969505953102e-04),
+        (0.1, np.array([[0.3], [-40]]), 1.e-2, 6.682969505953102e-02),
+        (0.1, np.array([[0.3], [-40]]), 1.e-1, 6.682969505961436),
+        (0.1, np.array([[0.3], [-40]]), 0.5, 167.07423764903606),
+    ]
+)
+def test_disturbed_b_functions(t, point, delta, error):
+    precision = 'float64'
+    exact_result = np.zeros(shape=(2, 3))
+    disturb_result = np.zeros(shape=(2, 3))
+    test_kernel = KernelWrapper(
+        get_function_kernel(b, pb), precision, outs=(2, 3),
+        state=State(1, seed=7)
+    )
+    test_kernel[1, 1](t, point, exact_result, disturb_result, delta)
+    assert (exact_result ** 2).sum() != 0
+    obtained_error = ((exact_result - disturb_result) ** 2).sum()
+    assert obtained_error == pytest.approx(error, abs=1.e-12)
