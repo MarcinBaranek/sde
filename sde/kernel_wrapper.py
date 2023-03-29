@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Optional, Iterable
 
 import numpy as np
@@ -15,7 +15,21 @@ from .wrapped_device_function import get_device_function_wrapper
 class State:
     n: int
     seed: int = 7
-    device_state: Optional[cuda.device_array] = None
+    device_state: Optional[cuda.device_array] =\
+        field(init=False, repr=False, default=None)
+
+    """Class for store and create random state.
+    
+    Attributes
+    ----------
+    n : int
+        Its number of thread used in algorithm. Optimal choose is number of 
+        threads times number of blocks
+    seed : int
+        Random seed. default is 7.
+    device_state : cuda.device_array
+        Array with states stored on the GPU.
+    """
 
     def __post_init__(self):
         self.device_state = random.create_xoroshiro128p_states(
@@ -28,6 +42,20 @@ class BasePrecisionChecker:
 
     @staticmethod
     def get_precision(precision: str) -> type:
+        """Returns precision type based on the name.
+
+        Arguments
+        ---------
+        precision : str
+            String representation of the precision should be one of:
+            (float16, float32, float64, float128).
+
+        Raises
+        ------
+        ValueError :
+            When giver precision is not one of the
+            (float16, float32, float64, float128).
+        """
         if precision not in precisions_map:
             raise ValueError(
                 f'got unknown precision {precision}. '
