@@ -110,7 +110,6 @@ def test_n_impact(n, error):
     assert ss_errors.mean() == pytest.approx(error)
 
 
-# TODO tests below functions
 def get_function_kernel(exact_func, disturbed_func):
     @cuda.jit
     def function_compare_kernel(
